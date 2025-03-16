@@ -8,7 +8,7 @@
 #include "BleConnectionStatus.h"
 #include "BleGamepad.h"
 #include "NimBLELog.h"
-#include "BleGamepadConfiguration.h"
+#include "BleCustomGamepadConfiguration.h"
 
 #include <stdexcept>
 

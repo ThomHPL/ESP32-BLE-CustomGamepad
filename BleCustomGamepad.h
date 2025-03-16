@@ -13,6 +13,59 @@
 #include "BleOutputReceiver.h"
 #include "BleNUS.h"
 
+uint8_t hidReportDescriptor[] = {
+  0x05, 0x01,        // Usage Page (Generic Desktop)
+  0x09, 0x00,        // Usage (Undefined, for VR tracker you might customize this)
+  0xA1, 0x01,        // Collection (Application)
+  
+      // Buttons
+      0x05, 0x09,    //   Usage Page (Button)
+      0x19, 0x01,    //   Usage Minimum (Button 1)
+      0x29, 0x08,    //   Usage Maximum (Button 8)
+      0x15, 0x00,    //   Logical Minimum (0)
+      0x25, 0x01,    //   Logical Maximum (1)
+      0x95, 0x08,    //   Report Count (8)
+      0x75, 0x01,    //   Report Size (1)
+      0x81, 0x02,    //   Input (Data, Variable, Absolute) ; 8 buttons
+      0x75, 0x08,    //   Report Size (8)
+      0x95, 0x01,    //   Report Count (1)
+      0x81, 0x03,    //   Input (Constant, Variable, Absolute) ; Padding
+  
+      // Position (X, Y, Z)
+      0x05, 0x01,    //   Usage Page (Generic Desktop)
+      0x09, 0x30,    //   Usage (X)
+      0x09, 0x31,    //   Usage (Y)
+      0x09, 0x32,    //   Usage (Z)
+      0x16, 0x00, 0x00, // Logical Minimum (0)
+      0x26, 0xFF, 0x7F, // Logical Maximum (32767)
+      0x75, 0x10,    //   Report Size (16)
+      0x95, 0x03,    //   Report Count (3)
+      0x81, 0x02,    //   Input (Data, Variable, Absolute)
+  
+      // Orientation (Quaternion W, X, Y, Z)
+      0x09, 0x33,    //   Usage (Rx)
+      0x09, 0x34,    //   Usage (Ry)
+      0x09, 0x35,    //   Usage (Rz)
+      0x0A, 0x36, 0x00, // Usage (custom for W)
+      0x16, 0x00, 0x00, // Logical Minimum (0)
+      0x26, 0xFF, 0x7F, // Logical Maximum (32767)
+      0x75, 0x10,    //   Report Size (16)
+      0x95, 0x04,    //   Report Count (4)
+      0x81, 0x02,    //   Input (Data, Variable, Absolute)
+  
+      // Battery Level
+      0x05, 0x06,    //   Usage Page (Generic Device Controls)
+      0x09, 0x20,    //   Usage (Battery Strength)
+      0x15, 0x00,    //   Logical Minimum (0)
+      0x26, 0x64, 0x00, // Logical Maximum (100)
+      0x75, 0x08,    //   Report Size (8)
+      0x95, 0x01,    //   Report Count (1)
+      0x81, 0x02,    //   Input (Data, Variable, Absolute)
+  
+  0xC0               // End Collection
+  
+};
+
 class BleGamepad
 {
   private:

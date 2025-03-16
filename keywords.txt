@@ -1,11 +1,11 @@
 #######################################
-# Syntax Coloring Map For ESP32 BLE Gamepad
+# Syntax Coloring Map For ESP32 BLE Custom Gamepad
 #######################################
 # Class
 #######################################
 
-BleGamepad  KEYWORD1
-BleGamepadConfiguration KEYWORD1
+BleCustomGamepad  KEYWORD1
+BleCustomGamepadConfiguration KEYWORD1
 
 #######################################
 # Methods and Functions

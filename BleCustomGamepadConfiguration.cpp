@@ -1,4 +1,4 @@
-#include "BleGamepadConfiguration.h"
+#include "BleCustomGamepadConfiguration.h"
 
 BleGamepadConfiguration::BleGamepadConfiguration() : _controllerType(CONTROLLER_TYPE_GAMEPAD),
                                                      _autoReport(true),
