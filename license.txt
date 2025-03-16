@@ -1,6 +1,12 @@
+/*
+Modifications by Thomas Herpoel (2025):
+- Code modified to work with customizable HID report descriptors
+*/
+
 Software License Agreement (MIT License)
 
 Copyright (c) 2021 lemmingDev - https://github.com/lemmingDev
+Copyright (c) 2025 Thomas Herpoel - https://github.com/ThomHPL
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
