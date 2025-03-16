@@ -6,7 +6,7 @@
 #include "HIDKeyboardTypes.h"
 #include "sdkconfig.h"
 #include "BleConnectionStatus.h"
-#include "BleGamepad.h"
+#include "BleCustomGamepad.h"
 #include "NimBLELog.h"
 #include "BleCustomGamepadConfiguration.h"
 

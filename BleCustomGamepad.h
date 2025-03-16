@@ -9,7 +9,7 @@
 #include "BleConnectionStatus.h"
 #include "NimBLEHIDDevice.h"
 #include "NimBLECharacteristic.h"
-#include "BleGamepadConfiguration.h"
+#include "BleCustomGamepadConfiguration.h"
 #include "BleOutputReceiver.h"
 #include "BleNUS.h"
 
