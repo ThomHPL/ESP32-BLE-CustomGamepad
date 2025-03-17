@@ -311,34 +311,6 @@ void BleCustomGamepad::setTXPowerLevel(int8_t level)
   NimBLEDevice::setPower(level);  // The only valid values are: -12, -9, -6, -3, 0, 3, 6 and 9
   configuration.setTXPowerLevel(level);
 }
-
-void BleCustomGamepad::setGyroscope(int16_t gX, int16_t gY, int16_t gZ)
-{
-  if (gX == -32768)
-  {
-    gX = -32767;
-  }
-  
-  if (gY == -32768)
-  {
-    gY = -32767;
-  }
-  
-  if (gY == -32768)
-  {
-    gY = -32767;
-  }
-  
-  _gX = gX;
-  _gY = gY;
-  _gZ = gZ; 
-  
-  if (configuration.getAutoReport())
-  {
-    sendReport();
-  }
-}
-
     
 void BleCustomGamepad::setPowerStateAll(uint8_t batteryPowerInformation, uint8_t dischargingState, uint8_t chargingState, uint8_t powerLevel)
 {
