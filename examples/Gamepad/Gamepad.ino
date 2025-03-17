@@ -25,93 +25,82 @@
  * start and select are enabled by default
  */
 
-#include <Arduino.h>
-#include <BleCustomGamepad.h>
-
-BleCustomGamepad bleGamepad;
-
-uint8_t defaultHIDReportDescriptor[] = {
-    0x05, 0x01,        // Usage Page (Generic Desktop)
-    0x09, 0x00,        // Usage (Undefined, for VR tracker you might customize this)
-    0xA1, 0x01,        // Collection (Application)
-    
-        // Buttons
-        0x05, 0x09,    //   Usage Page (Button)
-        0x19, 0x01,    //   Usage Minimum (Button 1)
-        0x29, 0x08,    //   Usage Maximum (Button 8)
-        0x15, 0x00,    //   Logical Minimum (0)
-        0x25, 0x01,    //   Logical Maximum (1)
-        0x95, 0x08,    //   Report Count (8)
-        0x75, 0x01,    //   Report Size (1)
-        0x81, 0x02,    //   Input (Data, Variable, Absolute) ; 8 buttons
-        0x75, 0x08,    //   Report Size (8)
-        0x95, 0x01,    //   Report Count (1)
-        0x81, 0x03,    //   Input (Constant, Variable, Absolute) ; Padding
-    
-        // Position (X, Y, Z)
-        0x05, 0x01,    //   Usage Page (Generic Desktop)
-        0x09, 0x30,    //   Usage (X)
-        0x09, 0x31,    //   Usage (Y)
-        0x09, 0x32,    //   Usage (Z)
-        0x16, 0x00, 0x00, // Logical Minimum (0)
-        0x26, 0xFF, 0x7F, // Logical Maximum (32767)
-        0x75, 0x10,    //   Report Size (16)
-        0x95, 0x03,    //   Report Count (3)
-        0x81, 0x02,    //   Input (Data, Variable, Absolute)
-    
-        // Orientation (Quaternion W, X, Y, Z)
-        0x09, 0x33,    //   Usage (Rx)
-        0x09, 0x34,    //   Usage (Ry)
-        0x09, 0x35,    //   Usage (Rz)
-        0x0A, 0x36, 0x00, // Usage (custom for W)
-        0x16, 0x00, 0x00, // Logical Minimum (0)
-        0x26, 0xFF, 0x7F, // Logical Maximum (32767)
-        0x75, 0x10,    //   Report Size (16)
-        0x95, 0x04,    //   Report Count (4)
-        0x81, 0x02,    //   Input (Data, Variable, Absolute)
-    
-        // Battery Level
-        0x05, 0x06,    //   Usage Page (Generic Device Controls)
-        0x09, 0x20,    //   Usage (Battery Strength)
-        0x15, 0x00,    //   Logical Minimum (0)
-        0x26, 0x64, 0x00, // Logical Maximum (100)
-        0x75, 0x08,    //   Report Size (8)
-        0x95, 0x01,    //   Report Count (1)
-        0x81, 0x02,    //   Input (Data, Variable, Absolute)
-    
-    0xC0               // End Collection
-    
+ #include <Arduino.h>
+ #include <BleCustomGamepad.h>
+ 
+ BleCustomGamepad bleGamepad;
+ 
+ uint8_t defaultHIDReportDescriptor[] = {
+     0x05, 0x01,                    // USAGE_PAGE (Generic Desktop)
+     0x09, 0x05,                    // USAGE (Game Pad)
+     0xa1, 0x01,                    // COLLECTION (Application)
+     0xa1, 0x00,                    //   COLLECTION (Physical)
+     // ReportID - 8 bits
+     0x85, 0x03,                    //     REPORT_ID (3)
+     // X & Y - 2x8 = 16 bits
+     0x05, 0x01,                    //     USAGE_PAGE (Generic Desktop)
+     0x09, 0x30,                    //     USAGE (X)
+     0x09, 0x31,                    //     USAGE (Y)
+     0x15, 0x80,                    //     LOGICAL_MINIMUM (-128)
+     0x25, 0x7f,                    //     LOGICAL_MAXIMUM (127)
+     0x75, 0x08,                    //     REPORT_SIZE (8)
+     0x95, 0x02,                    //     REPORT_COUNT (2)
+     0x81, 0x02,                    //     INPUT (Data,Var,Abs)
+     // Buttons - 8 bits
+     0x05, 0x09,                    //     USAGE_PAGE (Button)
+     0x19, 0x01,                    //     USAGE_MINIMUM (Button 1)
+     0x29, 0x08,                    //     USAGE_MAXIMUM (Button 8)
+     0x15, 0x00,                    //     LOGICAL_MINIMUM (0)
+     0x25, 0x01,                    //     LOGICAL_MAXIMUM (1)
+     0x75, 0x08,                    //     REPORT_SIZE (8)
+     0x95, 0x01,                    //     REPORT_COUNT (1)
+     0x81, 0x02,                    //     INPUT (Data,Var,Abs)
+     0xc0,                          //     END_COLLECTION
+     0xc0                           // END_COLLECTION
+     
+   };
+ 
+   typedef struct __attribute__ ((packed)) {
+     int8_t x;
+     int8_t y;
+     uint8_t buttons;
+     uint8_t battery;
+  } HIDGamepadReport;
+  
+  HIDGamepadReport hidReport = {
+    0, // x
+    0, // y
+    0, // buttons
+    100 // battery
   };
-
-void setup()
-{
-    Serial.begin(115200);
-    Serial.println("Starting BLE work!");
-    bleGamepad = new BleCustomGamepad("ESP32 BLE Custom Gamepad", "Espressif", 100, false);
-    bleGamepad.begin();
-    // The default bleGamepad.begin() above enables 16 buttons, all axes, one hat, and no simulation controls or special buttons
-}
-
-void loop()
-{
-    if (bleGamepad.isConnected())
-    {
-        Serial.println("Press buttons 5, 16 and start. Move all enabled axes to max. Set DPAD (hat 1) to down right.");
-        bleGamepad.press(BUTTON_5);
-        bleGamepad.press(BUTTON_16);
-        bleGamepad.pressStart();
-        bleGamepad.setAxes(32767, 32767, 32767, 32767, 32767, 32767, 32767, 32767);       //(X, Y, Z, RX, RY, RZ)
-        //bleGamepad.setHIDAxes(32767, 32767, 32767, 32767, 32767, 32767, 32767, 32767);  //(X, Y, Z, RZ, RX, RY)
-        bleGamepad.setHat1(HAT_DOWN_RIGHT);
-        // All axes, sliders, hats etc can also be set independently. See the IndividualAxes.ino example
-        delay(500);
-
-        Serial.println("Release button 5 and start. Move all axes to min. Set DPAD (hat 1) to centred.");
-        bleGamepad.release(BUTTON_5);
-        bleGamepad.releaseStart();
-        bleGamepad.setHat1(HAT_CENTERED);
-        bleGamepad.setAxes(0, 0, 0, 0, 0, 0, 0, 0);           //(X, Y, Z, RX, RY, RZ)
-        //bleGamepad.setHIDAxes(0, 0, 0, 0, 0, 0, 0, 0);      //(X, Y, Z, RZ, RX, RY)
-        delay(500);
-    }
-}
+  
+  void setup()
+  {
+      Serial.begin(115200);
+      Serial.println("Starting BLE work!");
+      bleGamepad = BleCustomGamepad("ESP32 BLE Custom Device", "Espressif", 100, false);
+      bleGamepad.setReportDescriptor(defaultHIDReportDescriptor, sizeof(defaultHIDReportDescriptor));
+      bleGamepad.setReport(&hidReport, sizeof(HIDMouseReport));
+      bleGamepad.begin();
+  }
+  
+  void loop()
+  {
+      if (bleGamepad.isConnected())
+      {
+          Serial.println("Press");
+          hidReport.buttons = 0b00000001;  
+          hidReport.x = 60;
+          hidReport.y = 60;       
+          bleGamepad.sendReport();
+          delay(1000);
+ 
+          Serial.println("Release");
+          hidReport.buttons = 0b00000000;
+          hidReport.x = -60;
+          hidReport.y = -60;
+          bleGamepad.sendReport();
+          delay(1000);
+      }
+  }
+  
