@@ -14,10 +14,10 @@
 
 #if defined(CONFIG_ARDUHAL_ESP_LOG)
 #include "esp32-hal-log.h"
-#define LOG_TAG "BLEGamepad"
+#define LOG_TAG "BleCustomGamepad"
 #else
 #include "esp_log.h"
-static const char *LOG_TAG = "BLEGamepad";
+static const char *LOG_TAG = "BleCustomGamepad";
 #endif
 
 #define SERVICE_UUID_DEVICE_INFORMATION         "180A"      // Service - Device information
@@ -40,32 +40,7 @@ static const char *LOG_TAG = "BLEGamepad";
 #define POWER_STATE_CHARGING        3 // 0b11
 #define POWER_STATE_CRITICAL        3 // 0b11
 
-BleGamepad::BleGamepad(std::string deviceName, std::string deviceManufacturer, uint8_t batteryLevel, bool delayAdvertising) : _buttons(),
-  _specialButtons(0),
-  _x(0),
-  _y(0),
-  _z(0),
-  _rX(0),
-  _rY(0),
-  _rZ(0),
-  _slider1(0),
-  _slider2(0),
-  _rudder(0),
-  _throttle(0),
-  _accelerator(0),
-  _brake(0),
-  _steering(0),
-  _hat1(0),
-  _hat2(0),
-  _hat3(0),
-  _hat4(0),
-  _gX(0),
-  _gY(0),
-  _gZ(0),
-  _aX(0),
-  _aY(0),
-  _aZ(0),
-  _batteryPowerInformation(0),
+BleCustomGamepad::BleCustomGamepad(std::string deviceName, std::string deviceManufacturer, uint8_t batteryLevel, bool delayAdvertising) : _batteryPowerInformation(0),
   _dischargingState(0),
   _chargingState(0),
   _powerLevel(0),
@@ -1070,544 +1045,12 @@ void BleGamepad::press(uint8_t b)
   }
 }
 
-void BleGamepad::release(uint8_t b)
-{
-  uint8_t index = (b - 1) / 8;
-  uint8_t bit = (b - 1) % 8;
-  uint8_t bitmask = (1 << bit);
-
-  uint64_t result = _buttons[index] & ~bitmask;
-
-  if (result != _buttons[index])
-  {
-    _buttons[index] = result;
-  }
-
-  if (configuration.getAutoReport())
-  {
-    sendReport();
-  }
-}
-
-uint8_t BleGamepad::specialButtonBitPosition(uint8_t b)
-{
-  if (b >= POSSIBLESPECIALBUTTONS)
-    throw std::invalid_argument("Index out of range");
-  uint8_t bit = 0;
-
-  for (int i = 0; i < b; i++)
-  {
-    if (configuration.getWhichSpecialButtons()[i])
-      bit++;
-  }
-  return bit;
-}
-
-void BleGamepad::pressSpecialButton(uint8_t b)
-{
-  uint8_t button = specialButtonBitPosition(b);
-  uint8_t bit = button % 8;
-  uint8_t bitmask = (1 << bit);
-
-  uint64_t result = _specialButtons | bitmask;
-
-  if (result != _specialButtons)
-  {
-    _specialButtons = result;
-  }
-
-  if (configuration.getAutoReport())
-  {
-    sendReport();
-  }
-}
-
-void BleGamepad::releaseSpecialButton(uint8_t b)
-{
-  uint8_t button = specialButtonBitPosition(b);
-  uint8_t bit = button % 8;
-  uint8_t bitmask = (1 << bit);
-
-  uint64_t result = _specialButtons & ~bitmask;
-
-  if (result != _specialButtons)
-  {
-    _specialButtons = result;
-  }
-
-  if (configuration.getAutoReport())
-  {
-    sendReport();
-  }
-}
-
-void BleGamepad::pressStart()
-{
-  pressSpecialButton(START_BUTTON);
-}
-
-void BleGamepad::releaseStart()
-{
-  releaseSpecialButton(START_BUTTON);
-}
-
-void BleGamepad::pressSelect()
-{
-  pressSpecialButton(SELECT_BUTTON);
-}
-
-void BleGamepad::releaseSelect()
-{
-  releaseSpecialButton(SELECT_BUTTON);
-}
-
-void BleGamepad::pressMenu()
-{
-  pressSpecialButton(MENU_BUTTON);
-}
-
-void BleGamepad::releaseMenu()
-{
-  releaseSpecialButton(MENU_BUTTON);
-}
-
-void BleGamepad::pressHome()
-{
-  pressSpecialButton(HOME_BUTTON);
-}
-
-void BleGamepad::releaseHome()
-{
-  releaseSpecialButton(HOME_BUTTON);
-}
-
-void BleGamepad::pressBack()
-{
-  pressSpecialButton(BACK_BUTTON);
-}
-
-void BleGamepad::releaseBack()
-{
-  releaseSpecialButton(BACK_BUTTON);
-}
-
-void BleGamepad::pressVolumeInc()
-{
-  pressSpecialButton(VOLUME_INC_BUTTON);
-}
-
-void BleGamepad::releaseVolumeInc()
-{
-  releaseSpecialButton(VOLUME_INC_BUTTON);
-}
-
-void BleGamepad::pressVolumeDec()
-{
-  pressSpecialButton(VOLUME_DEC_BUTTON);
-}
-
-void BleGamepad::releaseVolumeDec()
-{
-  releaseSpecialButton(VOLUME_DEC_BUTTON);
-}
-
-void BleGamepad::pressVolumeMute()
-{
-  pressSpecialButton(VOLUME_MUTE_BUTTON);
-}
-
-void BleGamepad::releaseVolumeMute()
-{
-  releaseSpecialButton(VOLUME_MUTE_BUTTON);
-}
-
-void BleGamepad::setLeftThumb(int16_t x, int16_t y)
-{
-  if (x == -32768)
-  {
-    x = -32767;
-  }
-  if (y == -32768)
-  {
-    y = -32767;
-  }
-
-  _x = x;
-  _y = y;
-
-  if (configuration.getAutoReport())
-  {
-    sendReport();
-  }
-}
-
-void BleGamepad::setRightThumb(int16_t z, int16_t rZ)
-{
-  if (z == -32768)
-  {
-    z = -32767;
-  }
-  if (rZ == -32768)
-  {
-    rZ = -32767;
-  }
-
-  _z = z;
-  _rZ = rZ;
-
-  if (configuration.getAutoReport())
-  {
-    sendReport();
-  }
-}
-
-void BleGamepad::setRightThumbAndroid(int16_t z, int16_t rX)
-{
-  if (z == -32768)
-  {
-    z = -32767;
-  }
-  if (rX == -32768)
-  {
-    rX = -32767;
-  }
-
-  _z = z;
-  _rX = rX;
-
-  if (configuration.getAutoReport())
-  {
-    sendReport();
-  }
-}
-
-void BleGamepad::setLeftTrigger(int16_t rX)
-{
-  if (rX == -32768)
-  {
-    rX = -32767;
-  }
-
-  _rX = rX;
-
-  if (configuration.getAutoReport())
-  {
-    sendReport();
-  }
-}
-
-void BleGamepad::setRightTrigger(int16_t rY)
-{
-  if (rY == -32768)
-  {
-    rY = -32767;
-  }
-
-  _rY = rY;
-
-  if (configuration.getAutoReport())
-  {
-    sendReport();
-  }
-}
-
-void BleGamepad::setTriggers(int16_t rX, int16_t rY)
-{
-  if (rX == -32768)
-  {
-    rX = -32767;
-  }
-  if (rY == -32768)
-  {
-    rY = -32767;
-  }
-
-  _rX = rX;
-  _rY = rY;
-
-  if (configuration.getAutoReport())
-  {
-    sendReport();
-  }
-}
-
-void BleGamepad::setHat(signed char hat)
-{
-  _hat1 = hat;
-
-  if (configuration.getAutoReport())
-  {
-    sendReport();
-  }
-}
-
-void BleGamepad::setHat1(signed char hat1)
-{
-  _hat1 = hat1;
-
-  if (configuration.getAutoReport())
-  {
-    sendReport();
-  }
-}
-
-void BleGamepad::setHat2(signed char hat2)
-{
-  _hat2 = hat2;
-
-  if (configuration.getAutoReport())
-  {
-    sendReport();
-  }
-}
-
-void BleGamepad::setHat3(signed char hat3)
-{
-  _hat3 = hat3;
-
-  if (configuration.getAutoReport())
-  {
-    sendReport();
-  }
-}
-
-void BleGamepad::setHat4(signed char hat4)
-{
-  _hat4 = hat4;
-
-  if (configuration.getAutoReport())
-  {
-    sendReport();
-  }
-}
-
-void BleGamepad::setX(int16_t x)
-{
-  if (x == -32768)
-  {
-    x = -32767;
-  }
-
-  _x = x;
-
-  if (configuration.getAutoReport())
-  {
-    sendReport();
-  }
-}
-
-void BleGamepad::setY(int16_t y)
-{
-  if (y == -32768)
-  {
-    y = -32767;
-  }
-
-  _y = y;
-
-  if (configuration.getAutoReport())
-  {
-    sendReport();
-  }
-}
-
-void BleGamepad::setZ(int16_t z)
-{
-  if (z == -32768)
-  {
-    z = -32767;
-  }
-
-  _z = z;
-
-  if (configuration.getAutoReport())
-  {
-    sendReport();
-  }
-}
-
-void BleGamepad::setRZ(int16_t rZ)
-{
-  if (rZ == -32768)
-  {
-    rZ = -32767;
-  }
-
-  _rZ = rZ;
-
-  if (configuration.getAutoReport())
-  {
-    sendReport();
-  }
-}
-
-void BleGamepad::setRX(int16_t rX)
-{
-  if (rX == -32768)
-  {
-    rX = -32767;
-  }
-
-  _rX = rX;
-
-  if (configuration.getAutoReport())
-  {
-    sendReport();
-  }
-}
-
-void BleGamepad::setRY(int16_t rY)
-{
-  if (rY == -32768)
-  {
-    rY = -32767;
-  }
-
-  _rY = rY;
-
-  if (configuration.getAutoReport())
-  {
-    sendReport();
-  }
-}
-
-void BleGamepad::setSlider(int16_t slider)
-{
-  if (slider == -32768)
-  {
-    slider = -32767;
-  }
-
-  _slider1 = slider;
-
-  if (configuration.getAutoReport())
-  {
-    sendReport();
-  }
-}
-
-void BleGamepad::setSlider1(int16_t slider1)
-{
-  if (slider1 == -32768)
-  {
-    slider1 = -32767;
-  }
-
-  _slider1 = slider1;
-
-  if (configuration.getAutoReport())
-  {
-    sendReport();
-  }
-}
-
-void BleGamepad::setSlider2(int16_t slider2)
-{
-  if (slider2 == -32768)
-  {
-    slider2 = -32767;
-  }
-
-  _slider2 = slider2;
-
-  if (configuration.getAutoReport())
-  {
-    sendReport();
-  }
-}
-
-void BleGamepad::setRudder(int16_t rudder)
-{
-  if (rudder == -32768)
-  {
-    rudder = -32767;
-  }
-
-  _rudder = rudder;
-
-  if (configuration.getAutoReport())
-  {
-    sendReport();
-  }
-}
-
-void BleGamepad::setThrottle(int16_t throttle)
-{
-  if (throttle == -32768)
-  {
-    throttle = -32767;
-  }
-
-  _throttle = throttle;
-
-  if (configuration.getAutoReport())
-  {
-    sendReport();
-  }
-}
-
-void BleGamepad::setAccelerator(int16_t accelerator)
-{
-  if (accelerator == -32768)
-  {
-    accelerator = -32767;
-  }
-
-  _accelerator = accelerator;
-
-  if (configuration.getAutoReport())
-  {
-    sendReport();
-  }
-}
-
-void BleGamepad::setBrake(int16_t brake)
-{
-  if (brake == -32768)
-  {
-    brake = -32767;
-  }
-
-  _brake = brake;
-
-  if (configuration.getAutoReport())
-  {
-    sendReport();
-  }
-}
-
-void BleGamepad::setSteering(int16_t steering)
-{
-  if (steering == -32768)
-  {
-    steering = -32767;
-  }
-
-  _steering = steering;
-
-  if (configuration.getAutoReport())
-  {
-    sendReport();
-  }
-}
-
-bool BleGamepad::isPressed(uint8_t b)
-{
-  uint8_t index = (b - 1) / 8;
-  uint8_t bit = (b - 1) % 8;
-  uint8_t bitmask = (1 << bit);
-
-  if ((bitmask & _buttons[index]) > 0)
-    return true;
-  return false;
-}
-
-bool BleGamepad::isConnected(void)
+bool BleCustomGamepad::isConnected(void)
 {
   return this->connectionStatus->connected;
 }
 
-void BleGamepad::setBatteryLevel(uint8_t level)
+void BleCustomGamepad::setBatteryLevel(uint8_t level)
 {
   this->batteryLevel = level;
   if (hid != 0)
@@ -1622,7 +1065,7 @@ void BleGamepad::setBatteryLevel(uint8_t level)
   }
 }
 
-bool BleGamepad::isOutputReceived()
+bool BleCustomGamepad::isOutputReceived()
 {
   if (enableOutputReport && outputReceiver)
   {
@@ -1635,7 +1078,7 @@ bool BleGamepad::isOutputReceived()
   return false;
 }
 
-uint8_t* BleGamepad::getOutputBuffer()
+uint8_t* BleCustomGamepad::getOutputBuffer()
 {
   if (enableOutputReport && outputReceiver)
   {
@@ -1645,7 +1088,7 @@ uint8_t* BleGamepad::getOutputBuffer()
   return nullptr;
 }
 
-bool BleGamepad::deleteAllBonds(bool resetBoard)
+bool BleCustomGamepad::deleteAllBonds(bool resetBoard)
 {
   bool success = false;
 
@@ -1663,7 +1106,7 @@ bool BleGamepad::deleteAllBonds(bool resetBoard)
   return success;	// Returns false if all bonds are not deleted
 }
 
-bool BleGamepad::deleteBond(bool resetBoard)
+bool BleCustomGamepad::deleteBond(bool resetBoard)
 {
   bool success = false;
 
@@ -1688,7 +1131,7 @@ bool BleGamepad::deleteBond(bool resetBoard)
   return success;	// Returns false if current bond is not deleted
 }
 
-bool BleGamepad::enterPairingMode()
+bool BleCustomGamepad::enterPairingMode()
 {
   NimBLEServer* server = NimBLEDevice::getServer();
 
@@ -1743,7 +1186,7 @@ bool BleGamepad::enterPairingMode()
   return false;
 }
 
-NimBLEAddress BleGamepad::getAddress()
+NimBLEAddress BleCustomGamepad::getAddress()
 {
   NimBLEServer* server = NimBLEDevice::getServer();
 
@@ -1758,7 +1201,7 @@ NimBLEAddress BleGamepad::getAddress()
   return blankAddress;
 }
 
-String BleGamepad::getStringAddress()
+String BleCustomGamepad::getStringAddress()
 {
   NimBLEServer* server = NimBLEDevice::getServer();
 
@@ -1773,35 +1216,35 @@ String BleGamepad::getStringAddress()
   return blankAddress.toString().c_str();
 }
 
-NimBLEConnInfo BleGamepad::getPeerInfo()
+NimBLEConnInfo BleCustomGamepad::getPeerInfo()
 {
   NimBLEServer* server = NimBLEDevice::getServer();
   NimBLEConnInfo currentConnInfo = server->getPeerInfo(0);
   return currentConnInfo;
 }
 
-String BleGamepad::getDeviceName()
+String BleCustomGamepad::getDeviceName()
 {
   return this->deviceName.c_str();
 }
 
-String BleGamepad::getDeviceManufacturer()
+String BleCustomGamepad::getDeviceManufacturer()
 {
   return this->deviceManufacturer.c_str();
 }
 
-int8_t BleGamepad::getTXPowerLevel()
+int8_t BleCustomGamepad::getTXPowerLevel()
 {
   return NimBLEDevice::getPower();
 }
 
-void BleGamepad::setTXPowerLevel(int8_t level)
+void BleCustomGamepad::setTXPowerLevel(int8_t level)
 {
   NimBLEDevice::setPower(level);  // The only valid values are: -12, -9, -6, -3, 0, 3, 6 and 9
   configuration.setTXPowerLevel(level);
 }
 
-void BleGamepad::setGyroscope(int16_t gX, int16_t gY, int16_t gZ)
+void BleCustomGamepad::setGyroscope(int16_t gX, int16_t gY, int16_t gZ)
 {
   if (gX == -32768)
   {
@@ -1828,64 +1271,8 @@ void BleGamepad::setGyroscope(int16_t gX, int16_t gY, int16_t gZ)
   }
 }
 
-void BleGamepad::setAccelerometer(int16_t aX, int16_t aY, int16_t aZ)
-{
-  _aX = aX;
-  _aY = aY;
-  _aZ = aZ;
-  
-  if (configuration.getAutoReport())
-  {
-    sendReport();
-  }
-}
-
-void BleGamepad::setMotionControls(int16_t gX, int16_t gY, int16_t gZ, int16_t aX, int16_t aY, int16_t aZ)
-{
-  if (gX == -32768)
-  {
-    gX = -32767;
-  }
-  
-  if (gY == -32768)
-  {
-    gY = -32767;
-  }
-  
-  if (gZ == -32768)
-  {
-    gZ = -32767;
-  }
-  
-  if (aX == -32768)
-  {
-    aX = -32767;
-  }
-  
-  if (aY == -32768)
-  {
-    aY = -32767;
-  }
-  
-  if (aZ == -32768)
-  {
-    aZ = -32767;
-  }
-  
-  _gX = gX;
-  _gY = gY;
-  _gZ = gZ;
-  _aX = aX;
-  _aY = aY;
-  _aZ = aZ; 
-  
-  if (configuration.getAutoReport())
-  {
-    sendReport();
-  }
-}
     
-void BleGamepad::setPowerStateAll(uint8_t batteryPowerInformation, uint8_t dischargingState, uint8_t chargingState, uint8_t powerLevel)
+void BleCustomGamepad::setPowerStateAll(uint8_t batteryPowerInformation, uint8_t dischargingState, uint8_t chargingState, uint8_t powerLevel)
 {
     uint8_t powerStateBits = 0b00000000;
     
@@ -1913,31 +1300,31 @@ void BleGamepad::setPowerStateAll(uint8_t batteryPowerInformation, uint8_t disch
 }
 
 
-void BleGamepad::setBatteryPowerInformation(uint8_t batteryPowerInformation)
+void BleCustomGamepad::setBatteryPowerInformation(uint8_t batteryPowerInformation)
 {
   _batteryPowerInformation = batteryPowerInformation;
   setPowerStateAll(_batteryPowerInformation, _dischargingState, _chargingState, _powerLevel);
 }
 
-void BleGamepad::setDischargingState(uint8_t dischargingState)
+void BleCustomGamepad::setDischargingState(uint8_t dischargingState)
 {
   _dischargingState = dischargingState;
   setPowerStateAll(_batteryPowerInformation, _dischargingState, _chargingState, _powerLevel);
 }
 
-void BleGamepad::setChargingState(uint8_t chargingState)
+void BleCustomGamepad::setChargingState(uint8_t chargingState)
 {
   _chargingState = chargingState;
   setPowerStateAll(_batteryPowerInformation, _dischargingState, _chargingState, _powerLevel);
 }
 
-void BleGamepad::setPowerLevel(uint8_t powerLevel)
+void BleCustomGamepad::setPowerLevel(uint8_t powerLevel)
 {
   _powerLevel = powerLevel;
   setPowerStateAll(_batteryPowerInformation, _dischargingState, _chargingState, _powerLevel);
 }
 
-void BleGamepad::beginNUS() 
+void BleCustomGamepad::beginNUS() 
 {
     if (!this->nusInitialized) 
     {
@@ -1952,12 +1339,12 @@ void BleGamepad::beginNUS()
     }
 }
 
-BleNUS* BleGamepad::getNUS() 
+BleNUS* BleCustomGamepad::getNUS() 
 {
     return nus;  // Return a pointer instead of a reference
 }
 
-void BleGamepad::sendDataOverNUS(const uint8_t* data, size_t length) 
+void BleCustomGamepad::sendDataOverNUS(const uint8_t* data, size_t length) 
 {
   if (nus) 
   {
@@ -1965,7 +1352,7 @@ void BleGamepad::sendDataOverNUS(const uint8_t* data, size_t length)
   }
 }
 
-void BleGamepad::setNUSDataReceivedCallback(void (*callback)(const uint8_t* data, size_t length)) 
+void BleCustomGamepad::setNUSDataReceivedCallback(void (*callback)(const uint8_t* data, size_t length)) 
 {
   if (nus) 
   {
@@ -1973,30 +1360,30 @@ void BleGamepad::setNUSDataReceivedCallback(void (*callback)(const uint8_t* data
   }
 }
 
-void BleGamepad::taskServer(void *pvParameter)
+void BleCustomGamepad::taskServer(void *pvParameter)
 {
-  BleGamepad *BleGamepadInstance = (BleGamepad *)pvParameter; // static_cast<BleGamepad *>(pvParameter);
+  BleCustomGamepad *BleCustomGamepadInstance = (BleCustomGamepad *)pvParameter; // static_cast<BleCustomGamepad *>(pvParameter);
 
-  NimBLEDevice::init(BleGamepadInstance->deviceName);
-  NimBLEDevice::setPower(BleGamepadInstance->configuration.getTXPowerLevel()); // Set transmit power for advertising (Range: -12 to +9 dBm)
+  NimBLEDevice::init(BleCustomGamepadInstance->deviceName);
+  NimBLEDevice::setPower(BleCustomGamepadInstance->configuration.getTXPowerLevel()); // Set transmit power for advertising (Range: -12 to +9 dBm)
   NimBLEServer *pServer = NimBLEDevice::createServer();
-  pServer->setCallbacks(BleGamepadInstance->connectionStatus);
+  pServer->setCallbacks(BleCustomGamepadInstance->connectionStatus);
   pServer->advertiseOnDisconnect(true);
 
-  BleGamepadInstance->hid = new NimBLEHIDDevice(pServer);
+  BleCustomGamepadInstance->hid = new NimBLEHIDDevice(pServer);
 
-  BleGamepadInstance->inputGamepad = BleGamepadInstance->hid->getInputReport(BleGamepadInstance->configuration.getHidReportId()); // <-- input REPORTID from report map
-  BleGamepadInstance->connectionStatus->inputGamepad = BleGamepadInstance->inputGamepad;
+  BleCustomGamepadInstance->inputGamepad = BleCustomGamepadInstance->hid->getInputReport(BleCustomGamepadInstance->configuration.getHidReportId()); // <-- input REPORTID from report map
+  BleCustomGamepadInstance->connectionStatus->inputGamepad = BleCustomGamepadInstance->inputGamepad;
 
-  if (BleGamepadInstance->enableOutputReport) 
+  if (BleCustomGamepadInstance->enableOutputReport) 
   {
-    BleGamepadInstance->outputGamepad = BleGamepadInstance->hid->getOutputReport(BleGamepadInstance->configuration.getHidReportId());
-    BleGamepadInstance->outputReceiver = new BleOutputReceiver(BleGamepadInstance->outputReportLength);
-    BleGamepadInstance->outputBackupBuffer = new uint8_t[BleGamepadInstance->outputReportLength];
-    BleGamepadInstance->outputGamepad->setCallbacks(BleGamepadInstance->outputReceiver);
+    BleCustomGamepadInstance->outputGamepad = BleCustomGamepadInstance->hid->getOutputReport(BleCustomGamepadInstance->configuration.getHidReportId());
+    BleCustomGamepadInstance->outputReceiver = new BleOutputReceiver(BleCustomGamepadInstance->outputReportLength);
+    BleCustomGamepadInstance->outputBackupBuffer = new uint8_t[BleCustomGamepadInstance->outputReportLength];
+    BleCustomGamepadInstance->outputGamepad->setCallbacks(BleCustomGamepadInstance->outputReceiver);
   }
 
-  BleGamepadInstance->hid->setManufacturer(BleGamepadInstance->deviceManufacturer);
+  BleCustomGamepadInstance->hid->setManufacturer(BleCustomGamepadInstance->deviceManufacturer);
 
   NimBLEService *pService = pServer->getServiceByUUID(SERVICE_UUID_DEVICE_INFORMATION);
 
@@ -2004,69 +1391,69 @@ void BleGamepad::taskServer(void *pvParameter)
         CHARACTERISTIC_UUID_MODEL_NUMBER,
         NIMBLE_PROPERTY::READ
       );
-  pCharacteristic_Model_Number->setValue(std::string(BleGamepadInstance->configuration.getModelNumber()));
+  pCharacteristic_Model_Number->setValue(std::string(BleCustomGamepadInstance->configuration.getModelNumber()));
 
   BLECharacteristic* pCharacteristic_Software_Revision = pService->createCharacteristic(
         CHARACTERISTIC_UUID_SOFTWARE_REVISION,
         NIMBLE_PROPERTY::READ
       );
-  pCharacteristic_Software_Revision->setValue(std::string(BleGamepadInstance->configuration.getSoftwareRevision()));
+  pCharacteristic_Software_Revision->setValue(std::string(BleCustomGamepadInstance->configuration.getSoftwareRevision()));
 
   BLECharacteristic* pCharacteristic_Serial_Number = pService->createCharacteristic(
         CHARACTERISTIC_UUID_SERIAL_NUMBER,
         NIMBLE_PROPERTY::READ
       );
-  pCharacteristic_Serial_Number->setValue(std::string(BleGamepadInstance->configuration.getSerialNumber()));
+  pCharacteristic_Serial_Number->setValue(std::string(BleCustomGamepadInstance->configuration.getSerialNumber()));
 
   BLECharacteristic* pCharacteristic_Firmware_Revision = pService->createCharacteristic(
         CHARACTERISTIC_UUID_FIRMWARE_REVISION,
         NIMBLE_PROPERTY::READ
       );
-  pCharacteristic_Firmware_Revision->setValue(std::string(BleGamepadInstance->configuration.getFirmwareRevision()));
+  pCharacteristic_Firmware_Revision->setValue(std::string(BleCustomGamepadInstance->configuration.getFirmwareRevision()));
 
   BLECharacteristic* pCharacteristic_Hardware_Revision = pService->createCharacteristic(
         CHARACTERISTIC_UUID_HARDWARE_REVISION,
         NIMBLE_PROPERTY::READ
       );
-  pCharacteristic_Hardware_Revision->setValue(std::string(BleGamepadInstance->configuration.getHardwareRevision()));
+  pCharacteristic_Hardware_Revision->setValue(std::string(BleCustomGamepadInstance->configuration.getHardwareRevision()));
   
-  NimBLECharacteristic* pCharacteristic_Power_State = BleGamepadInstance->hid->getBatteryService()->createCharacteristic(
+  NimBLECharacteristic* pCharacteristic_Power_State = BleCustomGamepadInstance->hid->getBatteryService()->createCharacteristic(
         CHARACTERISTIC_UUID_BATTERY_POWER_STATE,
         NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::NOTIFY
       );
-  BleGamepadInstance->pCharacteristic_Power_State = pCharacteristic_Power_State; // Assign the created characteristic
-  BleGamepadInstance->pCharacteristic_Power_State->setValue(0b00000000); // Now it's safe to call setValue <- Set all to unknown by default
+  BleCustomGamepadInstance->pCharacteristic_Power_State = pCharacteristic_Power_State; // Assign the created characteristic
+  BleCustomGamepadInstance->pCharacteristic_Power_State->setValue(0b00000000); // Now it's safe to call setValue <- Set all to unknown by default
 
-  BleGamepadInstance->hid->setPnp(0x01, BleGamepadInstance->configuration.getVid(), BleGamepadInstance->configuration.getPid(), BleGamepadInstance->configuration.getGuidVersion());
-  BleGamepadInstance->hid->setHidInfo(0x00, 0x01);
+  BleCustomGamepadInstance->hid->setPnp(0x01, BleCustomGamepadInstance->configuration.getVid(), BleCustomGamepadInstance->configuration.getPid(), BleCustomGamepadInstance->configuration.getGuidVersion());
+  BleCustomGamepadInstance->hid->setHidInfo(0x00, 0x01);
 
   // NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND);
   NimBLEDevice::setSecurityAuth(true, false, false); // enable bonding, no MITM, no SC
 
 
-  uint8_t *customHidReportDescriptor = new uint8_t[BleGamepadInstance->hidReportDescriptorSize];
-  memcpy(customHidReportDescriptor, BleGamepadInstance->tempHidReportDescriptor, BleGamepadInstance->hidReportDescriptorSize);
+  uint8_t customHidReportDescriptor[BleCustomGamepadInstance->hidReportDescriptorSize];
+  memcpy(customHidReportDescriptor, BleCustomGamepadInstance->tempHidReportDescriptor, BleCustomGamepadInstance->hidReportDescriptorSize);
 
-  // Testing - Ask ChatGPT to convert it into a commented HID descriptor
-  //Serial.println("------- HID DESCRIPTOR START -------");
-  //for (int i = 0; i < BleGamepadInstance->hidReportDescriptorSize; i++)
-  //{
+  // // Testing - Ask ChatGPT to convert it into a commented HID descriptor
+  // Serial.println("------- HID DESCRIPTOR START -------");
+  // for (int i = 0; i < BleCustomGamepadInstance->hidReportDescriptorSize; i++)
+  // {
   //    Serial.printf("%02x", customHidReportDescriptor[i]);
   //    Serial.println();
-  //}
-  //Serial.println("------- HID DESCRIPTOR END -------");
+  // }
+  // Serial.println("------- HID DESCRIPTOR END -------");
   
-  BleGamepadInstance->hid->setReportMap((uint8_t *)customHidReportDescriptor, BleGamepadInstance->hidReportDescriptorSize);
-  BleGamepadInstance->hid->startServices();
+  BleCustomGamepadInstance->hid->setReportMap((uint8_t *)customHidReportDescriptor, BleCustomGamepadInstance->hidReportDescriptorSize);
+  BleCustomGamepadInstance->hid->startServices();
 
-  BleGamepadInstance->onStarted(pServer);
+  BleCustomGamepadInstance->onStarted(pServer);
 
   NimBLEAdvertising *pAdvertising = pServer->getAdvertising();
   pAdvertising->setAppearance(HID_GAMEPAD);
-  pAdvertising->setName(BleGamepadInstance->deviceName);
-  pAdvertising->addServiceUUID(BleGamepadInstance->hid->getHidService()->getUUID());
+  pAdvertising->setName(BleCustomGamepadInstance->deviceName);
+  pAdvertising->addServiceUUID(BleCustomGamepadInstance->hid->getHidService()->getUUID());
   
-  if(BleGamepadInstance->delayAdvertising)
+  if(BleCustomGamepadInstance->delayAdvertising)
   {
     NIMBLE_LOGD(LOG_TAG, "Main NimBLE server advertising delayed (until Nordic UART Service added)");
   }
@@ -2076,7 +1463,7 @@ void BleGamepad::taskServer(void *pvParameter)
     pAdvertising->start();
   }
   
-  BleGamepadInstance->hid->setBatteryLevel(BleGamepadInstance->batteryLevel);
+  BleCustomGamepadInstance->hid->setBatteryLevel(BleCustomGamepadInstance->batteryLevel);
 
   vTaskDelay(portMAX_DELAY); // delay(portMAX_DELAY);
 }
